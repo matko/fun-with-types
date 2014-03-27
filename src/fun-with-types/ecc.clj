@@ -223,4 +223,8 @@ This relation is not transitive!"
           (assert (matching-type? (substitute right-type var left)
                                   (check right c)
                                   c))
-          sum-type)))
+          sum-type))
+      :reduce
+      `(~'pair ~(reduce left c)
+               ~(reduce right c)
+               ~(reduce sum-type c)))
