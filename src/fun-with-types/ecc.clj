@@ -176,26 +176,35 @@ This relation is not transitive!"
 ;;function calls
 (expr :default []
       :check
-      (let [[function argument] e
-            function-type (check function c)
-            argument-type (check argument c)]
+      (let [[function & arguments] e
+            function-type (check function c)]
         (assert (product-expression? function-type))
-        (let [[_ [var function-argument-type]
-               function-result-type] function-type]
-          (assert (matching-type? function-argument-type
-                                  argument-type
-                                  c))
-          (substitute function-result-type var argument)))
+        (loop [[_ [var function-argument-type] function-result-type] function-type
+               [argument & arguments] arguments]
+          (let [argument-type (check argument c)]
+            (assert (matching-type? function-argument-type
+                                    argument-type
+                                    c))
+            (let [result (substitute function-result-type var argument)]
+              (if (seq arguments)
+                (recur result arguments)
+                result)))
+          ))
 
       :reduce
-      (let [[function argument] e
-            [_ [var _] result-expression] (reduce function c)
-            argument (reduce argument c)]
-        (substitute result-expression var argument))
+      (let [[function & arguments] e]
+        (loop [[_ [var _] result-expression] (reduce function c)
+               [argument & arguments] arguments]
+          (let [result (reduce (substitute result-expression var argument) c)]
+            (if (seq arguments)
+              (recur result arguments)
+              result))
+          ))
       :substitute
-      (let [[function argument] e]
+      (let [[function & arguments] e]
         `(~(substitute function sym replacement)
-          ~(substitute argument sym replacement))))
+          ~@(map #(substitute % sym replacement)
+                 arguments))))
 
 (expr sum [[var type] second-type]
       :check
