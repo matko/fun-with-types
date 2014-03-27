@@ -41,7 +41,7 @@
   ([e c] (reduce (check' e c) c)))
 
 
-(defn- recognize-expression [e type]
+(defn recognize-expression [e type]
   (and (seq? e)
        (= type (first e))))
 
@@ -69,7 +69,7 @@
      ;;please somehow split this out we cannot generalize to this extent
 
 
-     (defn- ~(symbol (str type "-expression?"))
+     (defn ~(symbol (str type "-expression?"))
        [~'e]
        (recognize-expression ~'e '~type))))
 
@@ -155,12 +155,12 @@
       ;;is the same as
       ;; (lambda [y Prop] y)
 )
-(defn- equal-term? [t1 t2 c]
+(defn equal-term? [t1 t2 c]
   (= (reduce t1 c)
      (reduce t2 c)))
 
 ;;TODO there are other matching types. strong sums and dependent products also have a hierarchy
-(defn- matching-type?
+(defn matching-type?
   "type matches comparison-type if they're equal (reduced) terms, or if comparison-type is a (Type n1) and type is a Prop or a (Type n2) with n2<n1.
 This relation is not transitive!"
   [type comparison-type c]
