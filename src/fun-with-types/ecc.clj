@@ -12,7 +12,8 @@
   (boolean (first (filter #(= var (first %)) context))))
 
 (defn var-type [context var]
-  {:pre [(var-exists? context var)]}
+  {:pre [(or (var-exists? context var)
+             (error "no such var: %s" var))]}
   (second (first (filter #(= var (first %))
                          context))))
 
@@ -158,6 +159,7 @@
   (= (reduce t1 c)
      (reduce t2 c)))
 
+;;TODO there are other matching types. strong sums and dependent products also have a hierarchy
 (defn- matching-type?
   "type matches comparison-type if they're equal (reduced) terms, or if comparison-type is a (Type n1) and type is a Prop or a (Type n2) with n2<n1.
 This relation is not transitive!"
