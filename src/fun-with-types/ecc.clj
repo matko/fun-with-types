@@ -19,7 +19,7 @@
 ;;all check functions return types!
 
 (defn dispatch-check
-  ([e c]
+  ([e & _]
      (cond (seq? e)
            (first e)
            (symbol? e)
@@ -27,6 +27,7 @@
 
 (defmulti check' #'dispatch-check)
 (defmulti reduce' #'dispatch-check)
+(defmulti substitute #'dispatch-check)
 
 (defn reduce
   ([e] (reduce e []))
@@ -43,7 +44,7 @@
   (and (seq? e)
        (= type (first e))))
 
-(defmacro expr [type [& bindings] & {e-check :check e-reduce :reduce}]
+(defmacro expr [type [& bindings] & {e-check :check e-reduce :reduce e-substitute :substitute}]
   `(do
      ~@(if e-check `((defmethod check' '~type
                        [~'e ~'c]
@@ -52,13 +53,21 @@
                             `(do))
                         ~e-check))))
      ~@(if e-reduce `((defmethod reduce' '~type
-                        [~'e ~'c]
-                        (~@(if (seq bindings)
-                             `(let [[_# ~@bindings] ~'e])
-                             `(do))
-                         ~e-reduce))))
+                         [~'e ~'c]
+                         (~@(if (seq bindings)
+                              `(let [[_# ~@bindings] ~'e])
+                              `(do))
+                          ~e-reduce))))
+     ~@(if e-substitute `((defmethod substitute '~type
+                            [~'e ~'sym ~'replacement]
+                            (~@(if (seq bindings)
+                                 `(let [[_# ~@bindings] ~'e])
+                                 `(do))
+                             ~e-substitute))))
      ;;argh this macro wants to do way too much
      ;;please somehow split this out we cannot generalize to this extent
+
+
      (defn- ~(symbol (str type "-expression?"))
        [~'e]
        (recognize-expression ~'e '~type))))
@@ -68,7 +77,12 @@
       (case e
         Prop '(Type 0)
         (var-type c e))
-      :reduce e)
+      :reduce e
+      :substitute
+      (if (= sym e)
+        replacement
+        e)
+      )
 
 (expr Type []
       :check
@@ -76,7 +90,8 @@
         (assert (= (first e) 'Type))
         (assert (number? (second e)))
         `(~'Type ~(inc (second e))))
-      :reduce e)
+      :reduce e
+      :substitute e)
 
 ;;lambda is of this form:
 ;;(lambda [:var type] term)
@@ -90,7 +105,12 @@
 
       :reduce
       `(~'lambda [~var ~(reduce type c)]
-                 ~(reduce term (conj  c [var type]))))
+                 ~(reduce term (conj  c [var type])))
+      :substitute
+      `(~'lambda [~var ~(substitute type sym replacement)]
+                 ~(if (= sym var) ;this binding shadows, so replacement ends her
+                    term
+                    (substitute term sym replacement))))
 
 
 
@@ -122,12 +142,18 @@
           (largest-type type-type type-result-type)))
       :reduce
       `(~'product [~var ~(reduce type c)]
-                  ~(reduce result-type (conj c [var type]))))
+                  ~(reduce result-type (conj c [var type])))
+      :substitute
+      `(~'product [~var ~(substitute type sym replacement)]
+                  ~(if (= sym var) ;shadowing bind, end substitution here
+                     result-type
+                     (substitute result-type sym replacement)))
 
-;;TODO this should rename variables before checking equality so that
-;; (lambda [x Prop] x)
-;;is the same as
-;; (lambda [y Prop] y)
+      ;;TODO this should rename variables before checking equality so that
+      ;; (lambda [x Prop] x)
+      ;;is the same as
+      ;; (lambda [y Prop] y)
+)
 (defn- equal-term? [t1 t2 c]
   (= (reduce t1 c)
      (reduce t2 c)))
@@ -145,12 +171,7 @@ This relation is not transitive!"
                       (< (second rtype)
                          (second rcomparison-type))))))))
 
-(defn- substitute
-  "Substitute a variable for a term in another term. This does not perform any checks."
-  [var term original]
-  (postwalk-replace {var term}
-                    original))
-
+;;function calls
 (expr :default []
       :check
       (let [[function argument] e
@@ -162,13 +183,17 @@ This relation is not transitive!"
           (assert (matching-type? argument-type
                                   function-argument-type
                                   c))
-          (substitute var argument function-result-type)))
+          (substitute function-result-type var argument)))
 
       :reduce
       (let [[function argument] e
             [_ [var _] result-expression] (reduce function c)
             argument (reduce argument c)]
-        (substitute var argument result-expression)))
+        (substitute result-expression var argument))
+      :substitute
+      (let [[function argument] e]
+        `(~(substitute function sym replacement)
+          ~(substitute argument sym replacement))))
 
 (expr sum [[var type] second-type]
       :check
@@ -177,6 +202,11 @@ This relation is not transitive!"
         (largest-type type-type type-second-type))
 
       :reduce
-      `(sum [var ~(reduce type c)]
-            ~(reduce second-type (conj c [var ~(reduce type c)]))))
+      `(sum [~var ~(reduce type c)]
+            ~(reduce second-type (conj c [var ~(reduce type c)])))
+      :substitute
+      `(sum [~var ~(substitute type sym replacement)]
+            ~(if (= sym var) ;binding
+               second-type
+               (substitute second-type sym replacement))))
 
