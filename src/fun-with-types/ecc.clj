@@ -163,13 +163,13 @@
 This relation is not transitive!"
   [type comparison-type c]
   (let [rtype (reduce type c)
-        rcomparison-type (reduce type c)]
+        rcomparison-type (reduce comparison-type c)]
     (or (equal-term? rtype rcomparison-type c)
-        (and (Type-expression? rcomparison-type)
-             (or (= 'Prop rtype)
-                 (and (Type-expression? rtype)
-                      (< (second rtype)
-                         (second rcomparison-type))))))))
+        (and (Type-expression? rtype)
+             (or (= 'Prop rcomparison-type)
+                 (and (Type-expression? rcomparison-type)
+                      (< (second rcomparison-type)
+                         (second rtype))))))))
 
 ;;function calls
 (expr :default []
@@ -180,8 +180,8 @@ This relation is not transitive!"
         (assert (product-expression? function-type))
         (let [[_ [var function-argument-type]
                function-result-type] function-type]
-          (assert (matching-type? argument-type
-                                  function-argument-type
+          (assert (matching-type? function-argument-type
+                                  argument-type
                                   c))
           (substitute function-result-type var argument)))
 
@@ -202,11 +202,23 @@ This relation is not transitive!"
         (largest-type type-type type-second-type))
 
       :reduce
-      `(sum [~var ~(reduce type c)]
-            ~(reduce second-type (conj c [var ~(reduce type c)])))
+      `(~'sum [~var ~(reduce type c)]
+            ~(reduce second-type (conj c [var (reduce type c)])))
       :substitute
-      `(sum [~var ~(substitute type sym replacement)]
+      `(~'sum [~var ~(substitute type sym replacement)]
             ~(if (= sym var) ;binding
                second-type
                (substitute second-type sym replacement))))
 
+(expr pair [left right sum-type]
+      :check
+      (let [sum-type (reduce sum-type c)]
+        (assert (sum-expression? sum-type))
+        (let [[_ [var left-type] right-type] sum-type]
+          (assert (matching-type? left-type
+                                  (check left c)
+                                  c))
+          (assert (matching-type? (substitute right-type var left)
+                                  (check right c)
+                                  c))
+          sum-type)))
