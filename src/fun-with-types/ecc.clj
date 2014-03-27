@@ -227,4 +227,9 @@ This relation is not transitive!"
       :reduce
       `(~'pair ~(reduce left c)
                ~(reduce right c)
-               ~(reduce sum-type c)))
+               ~(reduce sum-type c))
+      :substitute
+      (do (println 'lols)
+          `(~'pair ~(substitute left sym replacement)
+                   ~(substitute right sym replacement)
+                   ~(substitute sum-type sym replacement))))
