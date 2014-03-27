@@ -212,7 +212,7 @@ This relation is not transitive!"
                second-type
                (substitute second-type sym replacement))))
 
-(expr pair [left right sum-type]
+(expr pair [sum-type left right]
       :check
       (let [sum-type (reduce sum-type c)]
         (assert (sum-expression? sum-type))
@@ -225,19 +225,19 @@ This relation is not transitive!"
                                   c))
           sum-type))
       :reduce
-      `(~'pair ~(reduce left c)
-               ~(reduce right c)
-               ~(reduce sum-type c))
+      `(~'pair ~(reduce sum-type c)
+               ~(reduce left c)
+               ~(reduce right c))
       :substitute
-      `(~'pair ~(substitute left sym replacement)
-               ~(substitute right sym replacement)
-               ~(substitute sum-type sym replacement)))
+      `(~'pair ~(substitute sum-type sym replacement)
+               ~(substitute left sym replacement)
+               ~(substitute right sym replacement)))
 
 (expr left [pair]
       :check
       (let [pair (reduce pair c)]
         (assert (pair-expression? pair))
-        (let [[_ left right sum-type] pair
+        (let [[_ sum-type left right] pair
               sum-type (reduce sum-type)]
           (assert (sum-expression? sum-type))
           (let [[_ [_ type] _] sum-type]
@@ -245,7 +245,7 @@ This relation is not transitive!"
       :reduce
       (let [pair (reduce pair c)]
         (assert (pair-expression? pair))
-        (let [[_ left right sum-type] pair]
+        (let [[_ sum-type left right] pair]
           (reduce left)))
       :substitute
       `(~'left ~(substitute pair sym replacement)))
@@ -254,7 +254,7 @@ This relation is not transitive!"
       :check
       (let [pair (reduce pair c)]
         (assert (pair-expression? pair))
-        (let [[_ left right sum-type] pair
+        (let [[_ sum-type left right] pair
               sum-type (reduce sum-type)]
           (assert (sum-expression? sum-type))
           (let [[_ [var left-type] right-type] sum-type]
@@ -262,7 +262,7 @@ This relation is not transitive!"
       :reduce
       (let [pair (reduce pair c)]
         (assert (pair-expression? pair))
-        (let [[_ left right sum-type] pair]
+        (let [[_ sum-type left right] pair]
           (reduce right)))
       :substitute
       `(~'left ~(substitute pair sym replacement)))
