@@ -21,7 +21,7 @@
 
 (defmacro functional-sugar [name expand-sym]
   `(ecc-macro ~name [[& vars-and-types#] result#]
-              (common-sugar-fn '~expand-sym vars-and-types# result#)))
+              (functional-sugar-fn '~expand-sym vars-and-types# result#)))
 
 ;;these are syntactically very similar, no sense in duplicating code.
 (functional-sugar function lambda)
