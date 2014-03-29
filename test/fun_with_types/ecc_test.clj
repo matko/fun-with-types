@@ -70,7 +70,7 @@
       => '(Type 42)
 
       ;;so NOT the type of the returned object! In other words, no eta-reduction.
-      ;;notice that the below reduces to Prop but still checks to (Type 42) instead of (Type 1)
+      ;;notice that the below reduces to Prop but still checks to (Type 42) instead of (Type 0)
       (ecc/check '((lambda [x (Type 42)] x) Prop))
       => '(Type 42))
 
