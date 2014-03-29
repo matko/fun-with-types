@@ -75,5 +75,5 @@
       => '(Type 42))
 
 (fact "The argument of a function needs to match the declared type"
-      (ecc/check '((lambda [x (Type 0)] (Type 42))))
+      (ecc/check '((lambda [x (Type 0)] x) (Type 42)))
       => (throws Error))
