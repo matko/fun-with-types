@@ -23,7 +23,7 @@
   ([e & _]
      (cond (seq? e)
            (first e)
-           (symbol? e)
+           :default
            :symbol)))
 
 (defmulti check' #'dispatch-check)
