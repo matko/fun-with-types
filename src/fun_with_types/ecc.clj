@@ -121,8 +121,8 @@
                     ~(check term (conj c [var type]))))
 
       :reduce
-      `(~'lambda [~var ~(reduce type c)]
-                 ~(reduce term (conj  c [var type])))
+      `(~'lambda [~var ~(reduce' type c)]
+                 ~(reduce' term (conj  c [var type])))
       :substitute
       `(~'lambda [~var ~(substitute type sym replacement)]
                  ~(if (= sym var) ;this binding shadows, so replacement ends her
@@ -158,8 +158,8 @@
           'Prop
           (largest-type type-type type-result-type)))
       :reduce
-      `(~'product [~var ~(reduce type c)]
-                  ~(reduce result-type (conj c [var type])))
+      `(~'product [~var ~(reduce' type c)]
+                  ~(reduce' result-type (conj c [var type])))
       :substitute
       `(~'product [~var ~(substitute type sym replacement)]
                   ~(if (= sym var) ;shadowing bind, end substitution here
@@ -209,9 +209,9 @@ This relation is not transitive!"
 
       :reduce
       (let [[function & arguments] e]
-        (loop [[_ [var _] result-expression] (reduce function c)
+        (loop [[_ [var _] result-expression] (reduce' function c)
                [argument & arguments] arguments]
-          (let [result (reduce (substitute result-expression var argument) c)]
+          (let [result (reduce' (substitute result-expression var argument) c)]
             (if (seq arguments)
               (recur result arguments)
               result))
@@ -229,8 +229,8 @@ This relation is not transitive!"
         (largest-type type-type type-second-type))
 
       :reduce
-      `(~'sum [~var ~(reduce type c)]
-            ~(reduce second-type (conj c [var (reduce type c)])))
+      `(~'sum [~var ~(reduce' type c)]
+            ~(reduce' second-type (conj c [var (reduce' type c)])))
       :substitute
       `(~'sum [~var ~(substitute type sym replacement)]
             ~(if (= sym var) ;binding
@@ -250,9 +250,9 @@ This relation is not transitive!"
                                   c))
           sum-type))
       :reduce
-      `(~'pair ~(reduce sum-type c)
-               ~(reduce left c)
-               ~(reduce right c))
+      `(~'pair ~(reduce' sum-type c)
+               ~(reduce' left c)
+               ~(reduce' right c))
       :substitute
       `(~'pair ~(substitute sum-type sym replacement)
                ~(substitute left sym replacement)
@@ -268,10 +268,10 @@ This relation is not transitive!"
           (let [[_ [_ type] _] sum-type]
             type)))
       :reduce
-      (let [pair (reduce pair c)]
+      (let [pair (reduce' pair c)]
         (assert (pair-expression? pair))
         (let [[_ sum-type left right] pair]
-          (reduce left)))
+          (reduce' left)))
       :substitute
       `(~'left ~(substitute pair sym replacement)))
 
@@ -285,9 +285,9 @@ This relation is not transitive!"
           (let [[_ [var left-type] right-type] sum-type]
             (substitute right-type var left))))
       :reduce
-      (let [pair (reduce pair c)]
+      (let [pair (reduce' pair c)]
         (assert (pair-expression? pair))
         (let [[_ sum-type left right] pair]
-          (reduce right)))
+          (reduce' right)))
       :substitute
       `(~'left ~(substitute pair sym replacement)))
