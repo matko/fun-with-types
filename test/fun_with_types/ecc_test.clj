@@ -73,3 +73,7 @@
       ;;notice that the below reduces to Prop but still checks to (Type 42) instead of (Type 1)
       (ecc/check '((lambda [x (Type 42)] x) Prop))
       => '(Type 42))
+
+(fact "The argument of a function needs to match the declared type"
+      (ecc/check '((lambda [x (Type 0)] (Type 42))))
+      => (throws Error))
