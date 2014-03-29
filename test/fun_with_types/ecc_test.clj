@@ -20,6 +20,18 @@
                           Prop))
       => '(product [x Prop] (Type 0)))
 
+(fact "The type of a product is (Type n), with n corresponding to a type 1 higher than those used in the abstraction."
+      (ecc/check '(product [x Prop] Prop))
+      => '(Type 0)
+      (ecc/check '(product [x Prop] (Type 0)))
+      => '(Type 1)
+      (ecc/check '(product [x (Type 0)] Prop))
+      => '(Type 1)
+      (ecc/check '(product [x (Type 20)] (Type 40)))
+      => '(Type 41)
+      (ecc/check '(product [x (Type 40)] (Type 10)))
+      => '(Type 41))
+
 (fact "A product whose result type is a Prop is itself a Prop"
       (ecc/check '(product [x Prop] x)) => 'Prop)
 
@@ -27,6 +39,16 @@
       (ecc/check '(pair (sum [x (Type 0)] (Type 0))
                         Prop Prop))
       => '(sum [x (Type 0)] (Type 0)))
+
+(fact "The type of a sum is (Type n), with n corresponding to a type 1 higher than those used in the abstraction."
+      (ecc/check '(sum [x Prop] x))
+      => '(Type 0)
+      (ecc/check '(sum [x Prop] Prop))
+      => '(Type 0)
+      (ecc/check '(sum [x (Type 41)] Prop))
+      => '(Type 42)
+      (ecc/check '(sum [x (Type 2)] (Type 41)))
+      => '(Type 42))
 
 (fact "The objects in a pair need to match the declared sum type."
       (ecc/check '(pair (sum [x (Type 0)] (Type 0))
@@ -47,7 +69,7 @@
       (ecc/check '((lambda [x (Type 0)] (Type 41)) Prop))
       => '(Type 42)
 
-      ;;so NOT the type of the returned object!
+      ;;so NOT the type of the returned object! In other words, no eta-reduction.
       ;;notice that the below reduces to Prop but still checks to (Type 42) instead of (Type 1)
       (ecc/check '((lambda [x (Type 42)] x) Prop))
       => '(Type 42))
