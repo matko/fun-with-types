@@ -38,7 +38,8 @@
 
 (defn check
   ([e] (check e ()))
-  ([e c] (reduce (check' e c) c)))
+  ([e c]
+     (reduce (check' e c) c)))
 
 
 (defn recognize-expression [e type]
@@ -112,6 +113,14 @@
       :reduce e
       :substitute e)
 
+(defn rebind-var [term c]
+  (let [[functional [var type] result-term] term
+        new-var (if (var-exists? c var)
+                  (gensym (str var "-"))
+                  var)
+        result-term (substitute result-term var new-var)]
+    `(~functional [~new-var ~type] ~result-term)))
+
 ;;lambda is of this form:
 ;;(lambda [:var type] term)
 (expr lambda [[var type] term]
@@ -123,8 +132,10 @@
                     ~(check term (conj c [var type]))))
 
       :reduce
-      `(~'lambda [~var ~(reduce' type c)]
-                 ~(reduce' term (conj  c [var type])))
+      (rebind-var
+       `(~'lambda [~var ~(reduce' type c)]
+                  ~(reduce' term (conj  c [var type])))
+       c)
       :substitute
       `(~'lambda [~var ~(substitute type sym replacement)]
                  ~(if (= sym var) ;this binding shadows, so replacement ends her
@@ -160,8 +171,10 @@
           'Prop
           (largest-type type-type type-result-type)))
       :reduce
-      `(~'product [~var ~(reduce' type c)]
-                  ~(reduce' result-type (conj c [var type])))
+      (rebind-var
+       `(~'product [~var ~(reduce' type c)]
+                   ~(reduce' result-type (conj c [var type])))
+       c)
       :substitute
       `(~'product [~var ~(substitute type sym replacement)]
                   ~(if (= sym var) ;shadowing bind, end substitution here
@@ -231,8 +244,10 @@ This relation is not transitive!"
         (largest-type type-type type-second-type))
 
       :reduce
-      `(~'sum [~var ~(reduce' type c)]
-            ~(reduce' second-type (conj c [var (reduce' type c)])))
+      (rebind-var
+       `(~'sum [~var ~(reduce' type c)]
+               ~(reduce' second-type (conj c [var (reduce' type c)])))
+       c)
       :substitute
       `(~'sum [~var ~(substitute type sym replacement)]
             ~(if (= sym var) ;binding
