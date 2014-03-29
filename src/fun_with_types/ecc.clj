@@ -73,12 +73,26 @@
        [~'e]
        (recognize-expression ~'e '~type))))
 
+(defonce *constant-table* (atom {}))
+
+(defn ecc-add-constant [var val]
+  (swap! *constant-table* assoc var val))
+
+(defn ecc-remove-constant [var]
+  (swap! *constant-table* dissoc var))
+
+(defmacro ecc-constant [var val]
+  `(ecc-add-constant '~var '~val))
+
 (expr :symbol []
       :check
-      (case e
-        Prop '(Type 0)
-        (var-type c e))
-      :reduce e
+      (or (if-let [constant (@*constant-table* e)]
+            (check constant)
+            (case e
+              Prop '(Type 0)
+              (var-type c e))))
+      :reduce (or (@*constant-table* e)
+                  e)
       :substitute
       (if (= sym e)
         replacement
