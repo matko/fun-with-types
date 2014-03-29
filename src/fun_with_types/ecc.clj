@@ -76,7 +76,9 @@
 (defonce *constant-table* (atom {}))
 
 (defn ecc-add-constant [var val]
-  (swap! *constant-table* assoc var val))
+  (let [result (check val)]
+    (swap! *constant-table* assoc var val)
+    result))
 
 (defn ecc-remove-constant [var]
   (swap! *constant-table* dissoc var))
