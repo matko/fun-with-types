@@ -31,13 +31,13 @@
 (defmulti substitute #'dispatch-check)
 
 (defn reduce
-  ([e] (reduce e []))
+  ([e] (reduce e ()))
   ([e c]
      {:pre [(check' e c)]}
      (reduce' e c)))
 
 (defn check
-  ([e] (check e []))
+  ([e] (check e ()))
   ([e c] (reduce (check' e c) c)))
 
 
