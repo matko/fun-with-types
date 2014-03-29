@@ -86,13 +86,15 @@
 
 (expr :symbol []
       :check
-      (or (if-let [constant (@*constant-table* e)]
-            (check constant)
-            (case e
-              Prop '(Type 0)
-              (var-type c e))))
-      :reduce (or (@*constant-table* e)
-                  e)
+      (if-let [constant (@*constant-table* e)]
+        (check constant c)
+        (case e
+          Prop '(Type 0)
+          (var-type c e)))
+      :reduce
+      (if-let [constant (@*constant-table* e)]
+        (reduce' constant c)
+        e)
       :substitute
       (if (= sym e)
         replacement
