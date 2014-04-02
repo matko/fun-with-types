@@ -1,5 +1,5 @@
 (ns fun-with-types.sugar
-  (:refer-clojure :exclude [reduce])
+  (:refer-clojure :exclude [reduce reduced?])
   (:require [fun-with-types.ecc :refer [expr check reduce substitute sum-expression?]]))
 
 

@@ -1,5 +1,5 @@
 (ns fun-with-types.ecc
-  (:refer-clojure :exclude [reduce])
+  (:refer-clojure :exclude [reduce reduced?])
   (:require [clojure.walk :refer [postwalk-replace]]))
 
 (defn error
@@ -30,32 +30,25 @@
 (defmulti reduce' #'dispatch-check)
 (defmulti substitute #'dispatch-check)
 
-(defn checked? [expression]
-  (:checked? (meta expression)))
-
-(defn normal? [expression]
-  (:normal? (meta expression)))
+(defn reduced? [expression]
+  (:reduced? (meta expression)))
 
 (defn reduce
   ([e] (reduce e ()))
   ([e c]
-     {:pre [(or (checked? e)
+     {:pre [(or (reduced? e) ;if this was previously reduced, it has already passed checks
                 (check' e c))
             (seq? c)]}
-     (if (normal? e)
+     (if (reduced? e)
        e
        (with-meta (reduce' e c)
-         {:checked true
-          :normal true}))))
+         {:reduced? true}))))
 
 (defn check
   ([e] (check e ()))
   ([e c]
      {:pre [(seq? c)]}
-     (if (checked? e)
-       e
-       (with-meta (reduce (check' e c) c)
-         {:checked true}))))
+     (reduce (check' e c) c)))
 
 
 (defn recognize-expression [e type]

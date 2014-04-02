@@ -1,5 +1,5 @@
 (ns fun-with-types.engine
-  (:refer-clojure :exclude [reduce])
+  (:refer-clojure :exclude [reduce reduced?])
   (:require [fun-with-types.ecc :refer :all]
             [fun-with-types.sugar :refer :all]))
 
