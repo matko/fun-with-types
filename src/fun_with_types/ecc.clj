@@ -193,11 +193,14 @@
 (declare matching-type? sum-expression? product-expression?)
 
 (defn- matching-type-pair?
-  [[_ [_ t1-a] t2-a]
-   [_ [_ t1-b] t2-b]
+  [[_ [va t1-a] t2-a]
+   [_ [vb t1-b] t2-b]
    c]
-  (and (matching-type? t1-a t2-a c)
-       (matching-type? t1-b t2-b c)))
+  ;;NOTE: I'm making matching-type? do the reduction for both types.
+  ;;this happens in the same context for both, which technically is not right for the var-type.
+  ;;nevertheless, var should not appear free in var-type, so this should work.
+  (and (matching-type? t1-a t2-a (conj c [va t1-a]))
+       (matching-type? t1-b t2-b (conj c [vb t1-b]))))
 
 (defn matching-type?
   "type matches comparison-type if they're equal (reduced) terms, or if comparison-type is a (Type n1) and type is a Prop or a (Type n2) with n2<n1, or if type and comparison-type are dependent products or strong sum, whose components match type.
