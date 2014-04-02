@@ -155,10 +155,8 @@
                     ~(check term (conj c [var type]))))
 
       :reduce
-      (rebind-var
-       `(~'lambda [~var ~(reduce' type c)]
-                  ~(reduce' term (conj  c [var type])))
-       c)
+      `(~'lambda [~var ~(reduce' type c)]
+                 ~(reduce' term (conj  c [var type])))
       :substitute
       `(~'lambda [~var ~(substitute type sym replacement)]
                  ~(if (= sym var) ;this binding shadows, so replacement ends her
@@ -197,10 +195,8 @@
             'Prop
             (largest-type type-type type-result-type))))
       :reduce
-      (rebind-var
-       `(~'product [~var ~(reduce' type c)]
-                   ~(reduce' result-type (conj c [var type])))
-       c)
+      `(~'product [~var ~(reduce' type c)]
+                  ~(reduce' result-type (conj c [var type])))
       :substitute
       `(~'product [~var ~(substitute type sym replacement)]
                   ~(if (= sym var) ;shadowing bind, end substitution here
@@ -227,20 +223,17 @@
   ([e s] (normalize e s ()))
   ([e s c]
      (let [e (reduce e c)
-           vars (bound-vars e c)
            i (atom 0)]
-       (clojure.core/reduce
-        (fn [e var]
-          (clojure.walk/postwalk-replace
-           {var (symbol (str s "-" (swap! i inc)))}
-           e))
-        e
-        vars))))
+       (clojure.walk/prewalk
+        (fn [e]
+          (if (binding-form? e)
+            (let [[binding [var type] result] e
+                  new-var (symbol (str s "-" (swap! i inc)))]
+              `(~binding [~new-var ~type]
+                 ~(substitute result var new-var)))
+            e))
+        e))))
 
-;;TODO this should rename variables before checking equality so that
-;; (lambda [x Prop] x)
-;;is the same as
-;; (lambda [y Prop] y)
 (defn equal-term? [t1 t2 c]
   (let [s (gensym "var-")]
     (= (normalize t1 s c)
@@ -316,10 +309,8 @@ This relation is not transitive!"
         (largest-type type-type type-second-type))
 
       :reduce
-      (rebind-var
-       `(~'sum [~var ~(reduce' type c)]
-               ~(reduce' second-type (conj c [var (reduce' type c)])))
-       c)
+      `(~'sum [~var ~(reduce' type c)]
+              ~(reduce' second-type (conj c [var (reduce' type c)])))
       :substitute
       `(~'sum [~var ~(substitute type sym replacement)]
             ~(if (= sym var) ;binding
