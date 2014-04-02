@@ -224,7 +224,7 @@
     @result))
 
 (defn normalize
-  ([e s] (normalize e s []))
+  ([e s] (normalize e s ()))
   ([e s c]
      (let [e (reduce e c)
            vars (bound-vars e c)
