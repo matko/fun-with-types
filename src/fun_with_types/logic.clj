@@ -13,8 +13,8 @@
 
 (defn expand-nary [sym fst scnd lst]
   `(~sym ~fst ~(if (seq lst)
-                   (expand-nary sym scnd (first lst) (next lst))
-                   scnd)))
+                 (expand-nary sym scnd (first lst) (next lst))
+                 scnd)))
 
 (defmacro ecc-nary [name expansion]
   `(ecc-macro ~name [fst# scnd# & lst#]
@@ -31,7 +31,7 @@
 (ecc-constant and2
               (function [p1 Prop p2 Prop]
                         (forall [X Prop]
-                                (implies2 (implies2 p1 (implies p2 X))
+                                (implies (implies p1 p2 X)
                                          X))))
 
 (ecc-nary and and2)
