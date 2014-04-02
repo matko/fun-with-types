@@ -51,13 +51,43 @@
                                     (first elements)))))]
                (build-pairs sum-type elements))))
 
+(defn add-defs-to-context [defs context]
+  (seq (concat (partition 2 defs) context)))
+
+(defn ecc-let-build-function-list [definitions context]
+  (clojure.core/reduce (fn [prev [var def]]
+                         `[~@prev ~var ~(check def
+                                               (add-defs-to-context prev context))])
+                       []
+                       definitions))
+
+(defn ecc-let-build-arg-list [definitions function-list arg-list context]
+  (if (seq? definitions)
+    (let [[[var def] & definitions] definitions]
+      (recur definitions
+             `[~@function-list ~var ~(check def
+                                           (add-defs-to-context function-list context))]
+             `[~@arg-list ~(if (seq function-list)
+                             (reduce `((~'function [~@function-list]
+                                                   ~def)
+                                       ~@arg-list)
+                                     context)
+                             def)]
+             context)
+      )
+    arg-list))
+
+
 (ecc-macro let [[& definitions] expression]
            (let [definitions (partition 2 definitions)
-                 function-list (clojure.core/reduce (fn [prev [var def]]
-                                                      `[~@prev ~var ~(check def c)])
-                                                    []
-                                                    definitions)
-                 defs (map second definitions)]
+                 function-list (ecc-let-build-function-list definitions c)
+                 function-args (ecc-let-build-arg-list definitions [] [] c)]
              `((~'function [~@function-list]
                            ~expression)
-               ~@defs)))
+               ~@function-args)))
+
+
+
+
+
+
