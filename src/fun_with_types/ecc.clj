@@ -41,8 +41,12 @@
             (seq? c)]}
      (if (reduced? e)
        e
-       (with-meta (reduce' e c)
-         {:reduced? true}))))
+       (let [reduced (reduce' e c)]
+         (if (or (symbol? reduced)
+                 (seq? reduced))
+           (with-meta reduced
+             {:reduced? true})
+           reduced)))))
 
 (defn check
   ([e] (check e ()))
@@ -96,13 +100,32 @@
 (defmacro ecc-constant [var val]
   `(ecc-add-constant '~var '~val))
 
+(defn type? [e c]
+  (let [e (check e c)]
+    (or (= e 'Prop)
+        (Type-expression? e))))
+
+(defonce *element-table* (atom {}))
+
+(defn ecc-add-element [element type]
+  (assert (type? type ()))
+  (swap! *element-table* assoc element type))
+
+(defn ecc-remove-element [element]
+  (swap! *element-table* dissoc element))
+
+(defmacro ecc-element [element type]
+  `(ecc-add-element '~element '~type))
+
 (expr :symbol []
       :check
       (if-let [constant (@*constant-table* e)]
         (check constant c)
-        (case e
-          Prop '(Type 0)
-          (var-type c e)))
+        (if-let [element-type (@*element-table* e)]
+          element-type
+          (case e
+            Prop '(Type 0)
+            (var-type c e))))
       :reduce
       (if-let [constant (@*constant-table* e)]
         (reduce' constant c)
@@ -131,10 +154,7 @@
     `(~functional [~new-var ~type] ~result-term)))
 
 
-(defn type? [e c]
-  (let [e (check e c)]
-    (or (= e 'Prop)
-        (Type-expression? e))))
+
 
 ;;lambda is of this form:
 ;;(lambda [:var type] term)
