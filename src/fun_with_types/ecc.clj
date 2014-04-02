@@ -30,16 +30,30 @@
 (defmulti reduce' #'dispatch-check)
 (defmulti substitute #'dispatch-check)
 
+(defn checked? [expression]
+  (:checked? (meta expression)))
+
+(defn normal? [expression]
+  (:normal? (meta expression)))
+
 (defn reduce
   ([e] (reduce e ()))
   ([e c]
-     {:pre [(check' e c)]}
-     (reduce' e c)))
+     {:pre [(or (checked? e)
+                (check' e c))]}
+     (if (normal? e)
+       e
+       (with-meta (reduce' e c)
+         {:checked true
+          :normal true}))))
 
 (defn check
   ([e] (check e ()))
   ([e c]
-     (reduce (check' e c) c)))
+     (if (checked? e)
+       e
+       (with-meta (reduce (check' e c) c)
+         {:checked true}))))
 
 
 (defn recognize-expression [e type]
