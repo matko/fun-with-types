@@ -190,14 +190,27 @@
   (= (reduce t1 c)
      (reduce t2 c)))
 
-;;TODO there are other matching types. strong sums and dependent products also have a hierarchy
+(declare matching-type? sum-expression? product-expression?)
+
+(defn- matching-type-pair?
+  [[_ [_ t1-a] t2-a]
+   [_ [_ t1-b] t2-b]
+   c]
+  (and (matching-type? t1-a t2-a c)
+       (matching-type? t1-b t2-b c)))
+
 (defn matching-type?
-  "type matches comparison-type if they're equal (reduced) terms, or if comparison-type is a (Type n1) and type is a Prop or a (Type n2) with n2<n1.
+  "type matches comparison-type if they're equal (reduced) terms, or if comparison-type is a (Type n1) and type is a Prop or a (Type n2) with n2<n1, or if type and comparison-type are dependent products or strong sum, whose components match type.
 This relation is not transitive!"
   [type comparison-type c]
   (let [rtype (reduce type c)
         rcomparison-type (reduce comparison-type c)]
     (or (equal-term? rtype rcomparison-type c)
+        (and (or (and (product-expression? rtype)
+                      (product-expression? rcomparison-type))
+                 (and (sum-expression? rtype)
+                      (sum-expression? rcomparison-type)))
+             (matching-type-pair? rtype rcomparison-type c))
         (and (Type-expression? rtype)
              (or (= 'Prop rcomparison-type)
                  (and (Type-expression? rcomparison-type)
