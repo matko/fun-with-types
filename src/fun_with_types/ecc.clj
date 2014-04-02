@@ -40,7 +40,8 @@
   ([e] (reduce e ()))
   ([e c]
      {:pre [(or (checked? e)
-                (check' e c))]}
+                (check' e c))
+            (list? c)]}
      (if (normal? e)
        e
        (with-meta (reduce' e c)
@@ -50,6 +51,7 @@
 (defn check
   ([e] (check e ()))
   ([e c]
+     {:pre [(list? c)]}
      (if (checked? e)
        e
        (with-meta (reduce (check' e c) c)
