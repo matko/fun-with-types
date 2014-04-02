@@ -50,3 +50,14 @@
                                                   elements)
                                     (first elements)))))]
                (build-pairs sum-type elements))))
+
+(ecc-macro let [[& definitions] expression]
+           (let [definitions (partition 2 definitions)
+                 function-list (clojure.core/reduce (fn [prev [var def]]
+                                                      `[~@prev ~var ~(check def c)])
+                                                    []
+                                                    definitions)
+                 defs (map second definitions)]
+             `((~'function [~@function-list]
+                           ~expression)
+               ~@defs)))
