@@ -135,12 +135,19 @@
         result-term (substitute result-term var new-var)]
     `(~functional [~new-var ~type] ~result-term)))
 
+
+(defn type? [e c]
+  (let [e (check e c)]
+    (or (= e 'Prop)
+        (Type-expression? e))))
+
 ;;lambda is of this form:
 ;;(lambda [:var type] term)
 (expr lambda [[var type] term]
       :check
       (do
         (assert (symbol? var))
+        (assert (type? type c))
         (check type c)
         `(~'product [~var ~type] 
                     ~(check term (conj c [var type]))))
@@ -179,11 +186,14 @@
 
 (expr product [[var type] result-type]
       :check
-      (let [type-type (check type c)
-            type-result-type (check result-type (conj c [var type]))]
-        (if (= 'Prop type-result-type)
-          'Prop
-          (largest-type type-type type-result-type)))
+      (do
+        (assert (type? type c))
+        (assert (type? result-type (conj c [var type])))
+        (let [type-type (check type c)
+              type-result-type (check result-type (conj c [var type]))]
+          (if (= 'Prop type-result-type)
+            'Prop
+            (largest-type type-type type-result-type))))
       :reduce
       (rebind-var
        `(~'product [~var ~(reduce' type c)]
@@ -193,16 +203,46 @@
       `(~'product [~var ~(substitute type sym replacement)]
                   ~(if (= sym var) ;shadowing bind, end substitution here
                      result-type
-                     (substitute result-type sym replacement)))
+                     (substitute result-type sym replacement))))
 
-      ;;TODO this should rename variables before checking equality so that
-      ;; (lambda [x Prop] x)
-      ;;is the same as
-      ;; (lambda [y Prop] y)
-)
+(defn binding-form? [e]
+  (and (seq? e)
+       (some (partial = (first e))
+             '[sum product lambda])))
+
+(defn bound-vars [expression context]
+  (let [expression (reduce expression context)
+        result (atom [])]
+    (clojure.walk/prewalk
+     (fn [e]
+       (when (binding-form? e)
+         (swap! result conj (first (second e))))
+       e)
+     expression)
+    @result))
+
+(defn normalize
+  ([e s] (normalize e s []))
+  ([e s c]
+     (let [e (reduce e c)
+           vars (bound-vars e c)
+           i (atom 0)]
+       (clojure.core/reduce
+        (fn [e var]
+          (clojure.walk/postwalk-replace
+           {var (symbol (str s "-" (swap! i inc)))}
+           e))
+        e
+        vars))))
+
+;;TODO this should rename variables before checking equality so that
+;; (lambda [x Prop] x)
+;;is the same as
+;; (lambda [y Prop] y)
 (defn equal-term? [t1 t2 c]
-  (= (reduce t1 c)
-     (reduce t2 c)))
+  (let [s (gensym "var-")]
+    (= (normalize t1 s c)
+       (normalize t2 s c))))
 
 (declare matching-type? sum-expression? product-expression?)
 
