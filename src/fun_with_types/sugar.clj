@@ -52,7 +52,9 @@
                (build-pairs sum-type elements))))
 
 (defn add-defs-to-context [defs context]
-  (seq (concat (partition 2 defs) context)))
+  (or
+   (seq (concat (partition 2 defs) context))
+   ()))
 
 (defn ecc-let-build-function-list [definitions context]
   (clojure.core/reduce (fn [prev [var def]]
