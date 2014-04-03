@@ -100,6 +100,16 @@
 (defmacro ecc-constant [var val]
   `(ecc-add-constant '~var '~val))
 
+(expr Type []
+      :check
+      (do
+        (assert (= (first e) 'Type))
+        (assert (number? (second e)))
+        `(~'Type ~(inc (second e))))
+      :reduce e
+      :substitute e)
+
+
 (defn type? [e c]
   (let [e (check e c)]
     (or (= e 'Prop)
@@ -136,14 +146,6 @@
         e)
       )
 
-(expr Type []
-      :check
-      (do 
-        (assert (= (first e) 'Type))
-        (assert (number? (second e)))
-        `(~'Type ~(inc (second e))))
-      :reduce e
-      :substitute e)
 
 (defn rebind-var [term c]
   (let [[functional [var type] result-term] term
@@ -302,13 +304,15 @@ This relation is not transitive!"
 
       :reduce
       (let [[function & arguments] e]
-        (loop [[_ [var _] result-expression] (reduce' function c)
-               [argument & arguments] arguments]
-          (let [result (reduce' (substitute result-expression var argument) c)]
-            (if (seq arguments)
-              (recur result arguments)
-              result))
-          ))
+        (if (symbol? function)
+          e
+          (loop [[_ [var _] result-expression] (reduce' function c)
+                 [argument & arguments] arguments]
+            (let [result (reduce' (substitute result-expression var argument) c)]
+              (if (seq arguments)
+                (recur result arguments)
+                result))
+            )))
       :substitute
       (let [[function & arguments] e]
         `(~(substitute function sym replacement)
