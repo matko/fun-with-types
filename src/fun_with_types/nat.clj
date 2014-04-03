@@ -21,22 +21,26 @@
 (expr RecNat [Nat->Type el0 eln->eln+1 n]
       :check
       (do (assert (matching-type? '(product [x Nat] (Type 0)) (check Nat->Type c) c))
-          (assert (matching-type? `(~Nat->Type 0) (check el0 c) c))
-          (assert (matching-type? `(~'product [x# ~'Nat]
-                                              (~'product [c# (~Nat->Type x#)]
-                                                         (~Nat->Type (~'succ x#))))
-                                  (check eln->eln+1 c)
-                                  c))
-          (assert (matching-type? 'Nat (check n) c))
-          (reduce `(~Nat->Type ~n) c))
+          (assert (matching-type? 'Nat (check n c) c))
+          (when (and (fully-expanded? Nat->Type)
+                     (fully-expanded? n)) ;;are we dealing with something properly expanded?
+            (assert (matching-type? `(~Nat->Type 0) (check el0 c) c))
+            (assert (matching-type? `(~'product [x# ~'Nat]
+                                                (~'product [c# (~Nat->Type x#)]
+                                                           (~Nat->Type (~'succ x#))))
+                                    (check eln->eln+1 c)
+                                    c))
+)
+          `(~Nat->Type ~n))
       :reduce
       (cond
        (= n 0) (reduce el0 c)
        (succ-expression? n) (reduce `(~eln->eln+1 ~(second n) (~'RecNat ~Nat->Type ~el0 ~eln->eln+1 ~(second n)))
-                                    c))
+                                    c)
+       :default e)
       :substitute
-      `(~'RecNat
-        ~(substitute Nat->Type sym replacement)
-        ~(substitute el0 sym replacement)
-        ~(substitute eln->eln+1 sym replacement)
-        ~(substitute n sym replacement)))
+      (do `(~'RecNat
+            ~(substitute Nat->Type sym replacement)
+            ~(substitute el0 sym replacement)
+            ~(substitute eln->eln+1 sym replacement)
+            ~(substitute n sym replacement))))

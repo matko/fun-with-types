@@ -388,3 +388,11 @@ This relation is not transitive!"
           (reduce' right)))
       :substitute
       `(~'left ~(substitute pair sym replacement)))
+
+;;This is a VERY UGLY HACK but it works.
+;;check without context throws an exception if it encounters a symbol other than a constant.
+(defn fully-expanded? [e]
+  (try
+    (do (check e)
+        true)
+    (catch Exception _ false)))
