@@ -22,11 +22,6 @@
 
 (ecc-nary implies implies2)
 
-(ecc-constant true
-              (forall [x Prop] (implies2 x x)))
-
-(ecc-constant false
-              (forall [x Prop] x))
 
 (ecc-constant and2
               (function [p1 Prop p2 Prop]
@@ -43,10 +38,6 @@
                                          (implies p2 X)
                                          X))))
 (ecc-nary or or2)
-
-(ecc-constant not
-              (function [p Prop]
-                        (implies p false)))
 
 (ecc-macro exists [[x type] prop]
            `(~'forall [X# ~'Prop]

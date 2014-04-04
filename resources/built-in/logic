@@ -1,0 +1,9 @@
+;; -*- mode: lisp; -*-
+(def true
+    (forall [x Prop] (implies x x)))
+
+(def false
+    (forall [x Prop] x))
+
+(def not
+    (function [x Prop] (implies x false)))
