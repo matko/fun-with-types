@@ -47,7 +47,7 @@
      (if (reduced? e)
        e
        (let [reduced (reduce' e c)]
-         (if (or (sym? reduced)
+         (if (or (symbol? reduced)
                  (seq? reduced))
            (with-meta reduced
              {:reduced? true})
