@@ -93,3 +93,7 @@
 
 (defn fwt-load [path]
   (apply fwt-do-fn (read-file path)))
+
+(defmethod fwt-eval' 'load
+  [[_ path] c]
+  (fwt-load path))
