@@ -33,6 +33,11 @@
 (defn reduced? [expression]
   (:reduced? (meta expression)))
 
+(defn sym? [x] (or (symbol? x)
+                   (keyword? x)
+                   (and (integer? x)
+                        (>= x 0))))
+
 (defn reduce
   ([e] (reduce e ()))
   ([e c]
@@ -42,7 +47,7 @@
      (if (reduced? e)
        e
        (let [reduced (reduce' e c)]
-         (if (or (symbol? reduced)
+         (if (or (sym? reduced)
                  (seq? reduced))
            (with-meta reduced
              {:reduced? true})
@@ -163,7 +168,7 @@
 (expr lambda [[var type] term]
       :check
       (do
-        (assert (symbol? var))
+        (assert (sym? var))
         (assert (type? type c))
         (check type c)
         `(~'product [~var ~type] 
@@ -304,7 +309,7 @@ This relation is not transitive!"
 
       :reduce
       (let [[function & arguments] e]
-        (if (symbol? function)
+        (if (sym? function)
           e
           (loop [[_ [var _] result-expression] (reduce' function c)
                  [argument & arguments] arguments]
