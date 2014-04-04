@@ -7,3 +7,23 @@
 
 (def not
     (function [x Prop] (implies x false)))
+
+(def implies2
+    (function [p1 Prop p2 Prop]
+	      (forall [x p1] p2)))
+
+(def and2
+    (function [p1 Prop p2 Prop]
+	      (forall [X Prop]
+		      (implies (implies p1 p2 X)
+			       X))))
+
+(def or2
+    (function [p1 Prop p2 Prop]
+	      (forall [X Prop]
+		      (implies (implies p1 X)
+			       (implies p2 X)
+			       X))))
+
+
+
