@@ -33,11 +33,15 @@
 )
           `(~Nat->Type ~n))
       :reduce
-      (cond
-       (= n 0) (reduce el0 c)
-       (succ-expression? n) (reduce `(~eln->eln+1 ~(second n) (~'RecNat ~Nat->Type ~el0 ~eln->eln+1 ~(second n)))
-                                    c)
-       :default e)
+      (let [Nat->Type (reduce' Nat->Type c)
+            el0 (reduce' el0 c)
+            eln->eln+1 (reduce' eln->eln+1 c)
+            n (reduce' n c)]
+        (cond
+         (= n 0) (reduce' el0 c)
+         (succ-expression? n) (reduce' `(~eln->eln+1 ~(second n) (~'RecNat ~Nat->Type ~el0 ~eln->eln+1 ~(second n)))
+                                       c)
+         :default `(~'RecNat ~Nat->Type ~el0 ~eln->eln+1 ~n)))
       :substitute
       (do `(~'RecNat
             ~(substitute Nat->Type sym replacement)
