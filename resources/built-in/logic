@@ -1,4 +1,8 @@
 ;; -*- mode: lisp; -*-
+(def implies2
+    (function [p1 Prop p2 Prop]
+	      (forall [x p1] p2)))
+
 (def true
     (forall [x Prop] (implies x x)))
 
@@ -7,10 +11,6 @@
 
 (def not
     (function [x Prop] (implies x false)))
-
-(def implies2
-    (function [p1 Prop p2 Prop]
-	      (forall [x p1] p2)))
 
 (def and2
     (function [p1 Prop p2 Prop]
