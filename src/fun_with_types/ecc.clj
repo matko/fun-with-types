@@ -298,9 +298,10 @@ This relation is not transitive!"
         (loop [[_ [var function-argument-type] function-result-type] function-type
                [argument & arguments] arguments]
           (let [argument-type (check argument c)]
-            (assert (matching-type? function-argument-type
-                                    argument-type
-                                    c))
+            (or (matching-type? function-argument-type
+                                argument-type
+                                c)
+                (error "function call doesn't match type.\n\tfunction:%s\n\tfunction-argument-type:%s\n\targument:%s\n\targument-type:%s\n\tcontext:%s\n" function function-argument-type argument argument-type c))
             (let [result (substitute function-result-type var argument)]
               (if (seq arguments)
                 (recur result arguments)
