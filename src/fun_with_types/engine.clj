@@ -43,7 +43,7 @@
 (defmethod fwt-eval' 'def
   [[_ name definition] c]
   (check (add-context definition c))
-  (conj c [name definition]))
+  (conj c [name (reduce (add-context definition c))]))
 
 
 (defmethod fwt-eval' 'check
