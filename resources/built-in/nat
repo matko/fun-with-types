@@ -1,0 +1,38 @@
+;; -*- mode: lisp; -*-
+
+(def CN
+    (function [n Nat] Nat))
+
+(def +
+    (function [m Nat n Nat]
+	      (RecNat CN
+		      m
+		      (function [x Nat y Nat]
+				(succ y))
+		      n)))
+
+(def pred
+    (function [n Nat]
+	      (RecNat CN
+		      0
+		      (function [x Nat y Nat]
+				x)
+		      n)))
+
+(def -
+    (function [m Nat n Nat]
+	      (RecNat CN
+		      m
+		      (function [x Nat y Nat]
+				(pred y))
+		      n)))
+
+(def *
+    (function [m Nat n Nat]
+	      (RecNat CN
+		      0
+		      (function [x Nat y Nat]
+				(+ m y))
+		      n)))
+
+
