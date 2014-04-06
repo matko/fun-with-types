@@ -1,38 +1,40 @@
 ;; -*- mode: lisp; -*-
 
-(def CN
-    (function [n Nat] Nat))
+(def RecN
+    (function [el0 Nat
+	       eln->n+1 (ftype [x Nat y Nat] Nat)
+	       n Nat]
+	      (RecNat (function [n Nat] Nat)
+		      el0
+		      eln->n+1
+		      n)))
 
 (def +
     (function [m Nat n Nat]
-	      (RecNat CN
-		      m
-		      (function [x Nat y Nat]
-				(succ y))
-		      n)))
+	      (RecN m
+		    (function [x Nat y Nat]
+			      (succ y))
+		    n)))
 
 (def pred
     (function [n Nat]
-	      (RecNat CN
-		      0
-		      (function [x Nat y Nat]
-				x)
-		      n)))
+	      (RecN 0
+		    (function [x Nat y Nat]
+			      x)
+		    n)))
 
 (def -
     (function [m Nat n Nat]
-	      (RecNat CN
-		      m
-		      (function [x Nat y Nat]
-				(pred y))
-		      n)))
+	      (RecN m
+		    (function [x Nat y Nat]
+			      (pred y))
+		    n)))
 
 (def *
     (function [m Nat n Nat]
-	      (RecNat CN
-		      0
-		      (function [x Nat y Nat]
-				(+ m y))
-		      n)))
+	      (RecN 0
+		    (function [x Nat y Nat]
+			      (+ m y))
+		    n)))
 
 
